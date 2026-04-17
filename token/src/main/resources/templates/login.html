@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Generar Token</title>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #e5e5e5;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+        }
+
+        .contenedor {
+            background: #f0f0f0;
+            padding: 40px;
+            border-radius: 20px;
+            width: 600px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        label {
+            font-size: 20px;
+            font-weight: bold;
+            display: block;
+            margin: 20px 0 10px;
+        }
+
+        input {
+            width: 100%;
+            padding: 18px;
+            border-radius: 15px;
+            border: 1px solid #ccc;
+            font-size: 18px;
+            box-sizing: border-box;
+        }
+
+        button {
+            width: 100%;
+            margin-top: 30px;
+            padding: 20px;
+            background: #2f61df;
+            color: white;
+            border: none;
+            border-radius: 15px;
+            font-size: 20px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background: #1e4cc7;
+        }
+
+        .resultado {
+            margin-top: 30px;
+            padding: 20px;
+            border-radius: 15px;
+            background: #ffffff;
+            border: 1px solid #ccc;
+        }
+
+        .token-box {
+            margin-top: 10px;
+            word-break: break-all;
+            font-size: 14px;
+            color: #333;
+        }
+
+        .error {
+            color: red;
+            margin-top: 15px;
+            font-weight: bold;
+            text-align: center;
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="contenedor">
+
+    <h1>Generar Token</h1>
+
+    <form id="loginForm">
+
+        <label for="username">Usuario</label>
+        <input type="text" id="username" value="admin" required>
+
+        <label for="password">Contraseña</label>
+        <input type="password" id="password" value="1234" required>
+
+        <button type="submit">Generar token</button>
+
+    </form>
+
+    <div id="error" class="error"></div>
+
+    <div class="resultado">
+        <strong>Token:</strong>
+        <div id="tokenTexto" class="token-box"></div>
+    </div>
+
+</div>
+
+<script>
+    const form = document.getElementById("loginForm");
+    const errorDiv = document.getElementById("error");
+    const tokenTexto = document.getElementById("tokenTexto");
+
+    form.addEventListener("submit", async function (e) {
+        e.preventDefault();
+
+        errorDiv.textContent = "";
+        tokenTexto.textContent = "";
+
+        const username = document.getElementById("username").value;
+        const password = document.getElementById("password").value;
+
+        try {
+            const response = await fetch("/api/auth/token", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    username: username,
+                    password: password
+                })
+            });
+
+            console.log("Status:", response.status);
+
+            const contentType = response.headers.get("content-type");
+
+            if (!response.ok) {
+                const errorText = await response.text();
+                console.log("Error:", errorText);
+                errorDiv.textContent = "Error: " + errorText;
+                return;
+            }
+
+            if (contentType && contentType.includes("application/json")) {
+                const data = await response.json();
+                console.log("Respuesta JSON:", data);
+
+                tokenTexto.textContent = data.token;
+
+            } else {
+                const text = await response.text();
+                console.log("Respuesta TEXT:", text);
+
+                tokenTexto.textContent = text;
+            }
+
+        } catch (error) {
+            console.error("Error:", error);
+            errorDiv.textContent = "Error al conectar con el servidor";
+        }
+    });
+</script>
+
+</body>
+</html>
